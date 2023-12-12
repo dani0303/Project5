@@ -5,20 +5,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class SortedArrayDictionary<K extends Comparable<? super K>, V> implements DictionaryInterface<K, V> {
-
-    class Entry <K, V> {
-        private K key;
-        private V value;
-        public Entry (K key, V value) {
-            this.key = key; this.value = value;
-        }
-        public K getKey() {return key;}
-        public V getValue() {return value;}
-        public void setValue (V newValue) {value = newValue;}
-    }
-
     private Entry <K, V>[] entries;
     private int numberOfEntries;
     private static final int DEFAULT_CAPACITY = 50;
@@ -49,13 +38,16 @@ public class SortedArrayDictionary<K extends Comparable<? super K>, V> implement
 
     private void  makeRoom(int keyIndex) {
         assert (keyIndex >= 0 && keyIndex <= numberOfEntries);
-        for (int idx = numberOfEntries; idx > newPosition; idx --) {
-            list[idx] = list[idx-1];
+        for (int idx = numberOfEntries; idx > keyIndex; idx --) {
+            entries[idx] = entries[idx-1];
         }
     }
 
-    private void removeGap(int key) {
-
+    private void removeGap(int givenPosition) {
+        assert (givenPosition >= 0 && givenPosition < numberOfEntries);
+        for (int index = givenPosition; index < numberOfEntries; index ++) {
+            entries[index] = entries[index+1];
+        }
     }
 
     @Override
@@ -88,14 +80,32 @@ public class SortedArrayDictionary<K extends Comparable<? super K>, V> implement
 
     @Override
     public V getValue(K key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getValue'");
+        int index = locateIndex (key);
+        if (index < numberOfEntries && key.compareTo(entries[index].getKey()) == 0) {
+            return entries [index].getValue();
+        }
+        return null;
     }
 
     @Override
     public boolean contains(K key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'contains'");
+        int low = 0, high = numberOfEntries - 1;
+        int mid;
+        int compValue;
+        while (low <= high) {
+            mid = (low + high)/2;
+            compValue = key.compareTo (entries[mid].getKey());
+            if (compValue == 0) {
+                return true;
+            }
+            else if (compValue > 0) {
+                low = mid + 1;
+            }
+            else {
+                high = mid - 1;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -112,14 +122,12 @@ public class SortedArrayDictionary<K extends Comparable<? super K>, V> implement
 
     @Override
     public int getSize() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getSize'");
+        return numberOfEntries;
     }
 
     @Override
     public boolean isEmpty() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isEmpty'");
+       return numberOfEntries == 0;
     }
 
     @Override
@@ -127,6 +135,56 @@ public class SortedArrayDictionary<K extends Comparable<? super K>, V> implement
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'clear'");
     }
-
     
+    public class KeyIterator implements Iterator <K> {
+        int cursor;
+
+        public KeyIterator() {
+            cursor = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return cursor < numberOfEntries;
+        }
+
+        @Override
+        public K next() {
+            if(!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            K out = entries[cursor ++].getKey();
+            return out;
+        }
+    }
+
+    public Iterator<K> getKIterator() {
+        return new KeyIterator();
+    }
+
+    private class ValueIterator implements Iterator <V> {
+        int cursor;
+
+        public ValueIterator() {
+            cursor = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return cursor < numberOfEntries;
+        }
+
+        @Override
+        public V next() {
+            if(!hasNext()) {
+                throw new NoSuchElementException();
+            } 
+            V out = entries[cursor ++].getValue();
+            return out;
+        }
+    }
+
+    public Iterator<V> getValIterator() {
+        return new ValueIterator();
+    }
 }
