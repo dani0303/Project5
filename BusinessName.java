@@ -9,6 +9,11 @@ public class BusinessName implements Comparable<BusinessName> {
         this.municipality = municipality;
     }
 
+    public BusinessName(String name) {
+        this.name = name;
+        this.municipality = null;
+    }
+
     @Override
     public int compareTo(BusinessName o) {
         // TODO Auto-generated method stub
